@@ -1,23 +1,32 @@
 #include "header.h"
 
-void create(){
-    union semun semaphore;
-    semaphore.val = 0;
+void create() {
+    printf("Let\'s CREATE!\n");
+    int semd;
+    int v, r;
+    char input[3];
 
-    printf("Let's CREATE!\n");
-
-    int newId = semget(KEY,1,IPC_CREAT | IPC_EXCL);
-    if (newId < 0){
-      printf("Error: cannot make semaphore \n" );
-    } else{
-      semaphore.val++;
-      semctl(newId, 0, SETVAL, semaphore.val);
-      int fd = open(FILENAME, O_CREAT | O_TRUNC, 0644);
-      if (fd < 0){
-          printf("Error %s", strerror(errno));
-      }
-      close(fd);
+    semd = semget(KEY, 1, IPC_CREAT | IPC_EXCL | 0644);
+    if (semd == -1) {
+        semd = semget(KEY, 1, 0);
+        v = semctl(semd, 0, GETVAL, 0);
+        printf("Semaphore already exists\n");
     }
+    else {
+        union semun us;
+        us.val = 1;
+        r = semctl(semd, 0, SETVAL, us);
+        printf("Created semaphore!\n");
+    }
+
+    int shmd;
+    char * data;
+    shmd = shmget(KEY, SEG_SIZE, IPC_CREAT | 0644);
+    data = shmat(shmd, 0, 0);
+    printf("Shared memory has been created.\n");
+
+    f = fopen(FILENAME,"w");
+    printf("File has been created.\n");
 }
 
 void myRemove() {
@@ -33,7 +42,6 @@ void myRemove() {
     semctl(semd, IPC_RMID, 0);
     printf("Removed!\n");
 
-    view();
     remove(FILENAME);
 
     printf("File removed!\n");
